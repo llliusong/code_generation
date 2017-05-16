@@ -1,0 +1,95 @@
+package com.jy.dingding.wangba.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.jy.dingding.wangba.bean.#pine#Entity;
+import com.jy.dingding.wangba.commons.Response;
+import com.jy.dingding.wangba.commons.ValidatorResultHandler;
+import com.jy.dingding.wangba.service.#pine#Service;
+import com.jy.dingding.wangba.util.BuildJSONUtils;
+import com.jy.dingding.wangba.util.JSONUtil;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.annotation.Resource;
+import javax.validation.Valid;
+
+@RequestMapping("/*pineapi")
+@Controller
+@Api(value = "/*pineapi", tags = "#pine#Controller", description = "#pine#Controller")
+public class #pine#Controller {
+
+    private static final Logger logger = LoggerFactory.getLogger(com.jy.dingding.wangba.controller.#pine#Controller.class.getCanonicalName());
+
+    @Resource
+    private #pine#Service *pineService;
+
+    @RequestMapping(value = "/list.json",method = RequestMethod.GET)
+    @ResponseBody
+    @ApiOperation(value = "列表",response = #pine#Entity.class)
+    public JSONObject select(Integer id){
+        JSONObject json = new JSONObject();
+        try {
+            #pine#Entity *pineEntity = *pineService.findByPrimaryKey(id);
+            json.put("result",0);
+            if(null == *pineEntity){
+                json.put("msg","暂无数据");
+            }else{
+                json.put("msg","ok");
+            }
+            json.put("data",*pineEntity);
+        }catch (Exception e){
+            json.put("result",1);
+            json.put("msg", "服务器异常：" + e.getMessage());
+            json.put("data", null);
+            e.printStackTrace();
+            logger.error(e.getMessage());
+        }
+        return json;
+    }
+
+
+    @RequestMapping(value = "/save.json",method = RequestMethod.POST)
+    @ResponseBody
+    @ApiOperation(value = "保存",response =#pine#Entity.class )
+    public JSONObject save(@Valid #pine#Entity entity,BindingResult result){
+        Response validResult= ValidatorResultHandler.validateEntity(result);
+        if(validResult.getResult()==1){
+            return JSON.parseObject(JSONUtil.object2JSON(validResult));
+        }
+        return *pineService.save(entity);
+    }
+
+    @RequestMapping(value = "/update.json",method = RequestMethod.POST)
+    @ResponseBody
+    @ApiOperation(value = "更新",response =#pine#Entity.class )
+    public JSONObject update(@Valid #pine#Entity entity,BindingResult result){
+        Response validResult= ValidatorResultHandler.validateEntity(result);
+        if(validResult.getResult()==1){
+            return JSON.parseObject(JSONUtil.object2JSON(validResult));
+        }
+        return *pineService.update(entity);
+    }
+
+    /**
+     * 此为物理删除，慎用之~~~
+     */
+    @RequestMapping(value = "/delete.json",method = RequestMethod.POST)
+    @ResponseBody
+    @ApiOperation(value = "删除",response =#pine#Entity.class )
+    public JSONObject update(Integer id){
+        if(id.equals(null)){
+            return BuildJSONUtils.getFailJSONObject("删除id不能为空");
+        }
+        if (*pineService.delete(id).equals("success"))
+            return BuildJSONUtils.getSucJSONObject();
+        return BuildJSONUtils.getFailJSONObject("删除失败");
+    }
+}
